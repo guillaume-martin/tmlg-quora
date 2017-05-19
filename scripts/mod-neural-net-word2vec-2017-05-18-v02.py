@@ -48,7 +48,7 @@ EMBEDDING_DIM = 300
 VALIDATION_SPLIT = 0.1
 TEST_SPLIT = 0.1
 NB_EPOCHS = 200
-DROPOUT_RATE = 0.7
+DROPOUT_RATE = 0.6
 RNG_SEED = 13
 
 STAMP = 'nn_dropout%d_epochs%d' % (DROPOUT_RATE, NB_EPOCHS)
@@ -258,14 +258,16 @@ t1 = time.time()
 print('Training ended at ', datetime.datetime.now())
 print('Minutes elapsed: %f' % ((t1 - t0) / 60.))
 
+#%% Review model performance
+
 model.load_weights(MODEL_WEIGHTS_FILE)
 
+# get the accuracy
 accuracy = model.evaluate([Q1_test, Q2_test], y_test)
 print('accuracy  = {0:.4f}'.format(accuracy))
 
+# save the best score 
 best_val_score = min(history.history['val_loss'])
-
-#%% Review model performance
 
 # list all data in history
 print(history.history.keys())
