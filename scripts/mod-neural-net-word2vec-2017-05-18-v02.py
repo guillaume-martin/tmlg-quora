@@ -6,8 +6,6 @@ Created on Thu May 18 10:03:50 2017
 
 @version: 02
 @changes
-increased dropout to 0.6
-increased nb epochs to 50
 """
 
 #%% Import packages
@@ -48,10 +46,10 @@ EMBEDDING_DIM = 300
 VALIDATION_SPLIT = 0.1
 TEST_SPLIT = 0.1
 NB_EPOCHS = 200
-DROPOUT_RATE = 0.6
+DROPOUT_RATE = 0.55
 RNG_SEED = 13
 
-STAMP = 'nn_dropout%d_epochs%d' % (DROPOUT_RATE, NB_EPOCHS)
+STAMP = 'nn_dropout%1.2f_epochs%d' % (DROPOUT_RATE, NB_EPOCHS)
 MODEL_WEIGHTS_FILE = STAMP + '.h5'
 
 #%% Create an index of word vectors
@@ -173,6 +171,13 @@ print('Shape of question1 tensor: ', train_q1_data.shape)
 print('Shape of question2 tensor: ', train_q2_data.shape)
 print('Shape of label tensor: ', labels.shape)
 
+# save the data so we don't need to preprocess again
+np.save(DATA_DIR + 'train_q1_data.npy', train_q1_data)
+np.save(DATA_DIR + 'train_q2_data.npy', train_q2_data)
+np.save(DATA_DIR + 'labels.npy', labels)
+np.save(DATA_DIR + 'test_q1_data.npy', test_q1_data)
+np.save(DATA_DIR + 'test_q2_data.npy', test_q2_data)
+np.save(DATA_DIR + 'test_ids.npy', test_ids)
 
 #%% Generate embedding matrix
 
@@ -279,7 +284,8 @@ plt.title('model accuracy')
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
-plt.show()
+#plt.show()
+plt.savefig('../img/accuracy' + STAMP + '.png')
 
 # summarize history for loss
 plt.plot(history.history['loss'])
@@ -288,7 +294,8 @@ plt.title('model loss')
 plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
-plt.show()
+# plt.show()
+plt.savefig('../img/loss' + STAMP + '.png')
 
 
 #%% Make predictions
