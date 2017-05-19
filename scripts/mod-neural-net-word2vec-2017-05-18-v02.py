@@ -281,22 +281,22 @@ print(history.history.keys())
 # summarize history for accuracy
 plt.plot(history.history['acc'])
 plt.plot(history.history['val_acc'])
-plt.title('model accuracy')
+plt.title('model accuracy - ' + DROPOUT_RATE)
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 #plt.show()
-plt.savefig('../img/accuracy_' + STAMP + '.png')
+plt.savefig('D:\\DataScience\\tmlg-quora\\img\\accuracy_' + STAMP + '.png')
 
 # summarize history for loss
 plt.plot(history.history['loss'])
 plt.plot(history.history['val_loss'])
-plt.title('model loss')
+plt.title('model loss - ' + DROPOUT_RATE)
 plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 # plt.show()
-plt.savefig('../img/loss_' + STAMP + '.png')
+plt.savefig('D:\\DataScience\\tmlg-quora\\img\\loss_' + STAMP + '.png')
 
 
 #%% Make predictions
