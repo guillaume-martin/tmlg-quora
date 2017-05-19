@@ -6,7 +6,7 @@ Created on Thu May 18 10:03:50 2017
 
 @version: 02
 @changes
-increased dropout to 0.6 
+increased dropout to 0.6
 increased nb epochs to 50
 """
 
@@ -62,16 +62,16 @@ word2vec = KeyedVectors.load_word2vec_format(EMBEDDING_FILE, binary=True)
 #%% Process text
 
 def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
-    
+
     # convert text to lowercase and split
     text = text.lower().split()
 
     if remove_stopwords:
         stops = set(stopwords.words('english'))
         text = [w for w in text if not w in stops]
-        
+
     text = " ".join(text)
-        
+
     # clean the text
     text = re.sub(r"[^A-Za-z0-9^,!.\/'+-=]", " ", text)
     text = re.sub(r"what's", "what is ", text)
@@ -102,14 +102,14 @@ def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
     text = re.sub(r"e - mail", "email", text)
     text = re.sub(r"j k", "jk", text)
     text = re.sub(r"\s{2,}", " ", text)
-    
+
     if stem_words:
         text = text.split()
         stemmer = SnowballStemmer('english')
         stemmed_words = [stemmer.stem(word) for word in text]
         text = " ".join(stemmed_words)
-        
-    return(text)
+
+    return text
 
 
 #%% Load the data
@@ -120,28 +120,28 @@ train_question1 = []
 train_question2 = []
 train_labels = []
 with open(DATA_DIR + TRAINING_DATA_FILE, encoding='utf-8') as f:
-    reader = csv.DictReader(f, delimiter = ',')
+    reader = csv.DictReader(f, delimiter=',')
     for row in reader:
         train_question1.append(text_to_wordlist(row['question1']))
         train_question2.append(text_to_wordlist(row['question2']))
         train_labels.append(row['is_duplicate'])
-        
+
 print('Found %s question pairs in train.csv' % len(train_question1))
-        
+
 # import the test data
 print('Importing test data')
 test_question1 = []
 test_question2 = []
 test_ids = []
 with open(DATA_DIR + TEST_DATA_FILE, encoding='utf-8') as f:
-    reader = csv.DictReader(f, delimiter = ',')
+    reader = csv.DictReader(f, delimiter=',')
     for row in reader:
         test_question1.append(text_to_wordlist(row['question1']))
         test_question2.append(text_to_wordlist(row['question2']))
         test_ids.append(row['test_id'])
-        
+
 print('Found %s question pairs in test.csv' % len(test_question1))
-        
+
 
 #%% Tokenize the questions
 
