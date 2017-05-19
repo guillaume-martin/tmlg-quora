@@ -269,7 +269,8 @@ model.load_weights(MODEL_WEIGHTS_FILE)
 
 # get the accuracy
 accuracy = model.evaluate([Q1_test, Q2_test], y_test)
-print('accuracy  = {0:.4f}'.format(accuracy))
+# accuracy is a list so the following line crash
+#print('accuracy  = {0:.4f}'.format(accuracy))
 
 # save the best score 
 best_val_score = min(history.history['val_loss'])
@@ -285,7 +286,7 @@ plt.ylabel('accuracy')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 #plt.show()
-plt.savefig('../img/accuracy' + STAMP + '.png')
+plt.savefig('../img/accuracy_' + STAMP + '.png')
 
 # summarize history for loss
 plt.plot(history.history['loss'])
@@ -295,7 +296,7 @@ plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 # plt.show()
-plt.savefig('../img/loss' + STAMP + '.png')
+plt.savefig('../img/loss_' + STAMP + '.png')
 
 
 #%% Make predictions
