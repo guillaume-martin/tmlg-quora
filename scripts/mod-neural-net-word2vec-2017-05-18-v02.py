@@ -33,23 +33,25 @@ from sklearn.model_selection import train_test_split
 #%% Set parameters
 
 # directories
-DATA_DIR = '../data/'
-SUBMISSIONS_DIR = '../submissions/'
+DATA_DIR = 'D:\\DataScience\\tmlg-quora\\data\\'
+SUBMISSIONS_DIR = 'D:\\DataScience\\tmlg-quora\\submissions\\'
 TRAINING_DATA_FILE = 'train.csv'
 TEST_DATA_FILE = 'test.csv'
-EMBEDDING_FILE = '~/Dropbox/DataScience/Data/GoogleNews-vectors-negative300.bin'
+EMBEDDING_FILE = 'D:\\DataScience\\tmlg-quora\\data\\GoogleNews-vectors-negative300.bin'
 
 # parameters
 MAX_NB_WORDS = 200000
-MAX_SEQUENCE_LENGTH = 25
+MAX_SEQUENCE_LENGTH = 40
 EMBEDDING_DIM = 300
 VALIDATION_SPLIT = 0.1
 TEST_SPLIT = 0.1
 NB_EPOCHS = 200
-DROPOUT_RATE = 0.55
+DROPOUT_RATE = 0.47
 RNG_SEED = 13
+STOPWORDS = False
+STEM = False
 
-STAMP = 'nn_dropout%1.2f_epochs%d' % (DROPOUT_RATE, NB_EPOCHS)
+STAMP = 'nn_maxseq%d_dropout%1.2f_stopwd%s_stem%s' % (MAX_SEQUENCE_LENGTH, DROPOUT_RATE, STOPWORDS, STEM)
 MODEL_WEIGHTS_FILE = STAMP + '.h5'
 
 #%% Create an index of word vectors
@@ -120,8 +122,8 @@ train_labels = []
 with open(DATA_DIR + TRAINING_DATA_FILE, encoding='utf-8') as f:
     reader = csv.DictReader(f, delimiter=',')
     for row in reader:
-        train_question1.append(text_to_wordlist(row['question1']))
-        train_question2.append(text_to_wordlist(row['question2']))
+        train_question1.append(text_to_wordlist(row['question1'],STOPWORDS,STEM))
+        train_question2.append(text_to_wordlist(row['question2'],STOPWORDS,STEM))
         train_labels.append(row['is_duplicate'])
 
 print('Found %s question pairs in train.csv' % len(train_question1))
@@ -134,8 +136,8 @@ test_ids = []
 with open(DATA_DIR + TEST_DATA_FILE, encoding='utf-8') as f:
     reader = csv.DictReader(f, delimiter=',')
     for row in reader:
-        test_question1.append(text_to_wordlist(row['question1']))
-        test_question2.append(text_to_wordlist(row['question2']))
+        test_question1.append(text_to_wordlist(row['question1'],STOPWORDS,STEM))
+        test_question2.append(text_to_wordlist(row['question2'],STOPWORDS,STEM))
         test_ids.append(row['test_id'])
 
 print('Found %s question pairs in test.csv' % len(test_question1))
@@ -281,17 +283,20 @@ print(history.history.keys())
 # summarize history for accuracy
 plt.plot(history.history['acc'])
 plt.plot(history.history['val_acc'])
-plt.title('model accuracy - ' + DROPOUT_RATE)
+plt.title('model accuracy - ' + str(DROPOUT_RATE))
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 #plt.show()
 plt.savefig('D:\\DataScience\\tmlg-quora\\img\\accuracy_' + STAMP + '.png')
 
+# clean the plot
+plt.clf() 
+
 # summarize history for loss
 plt.plot(history.history['loss'])
 plt.plot(history.history['val_loss'])
-plt.title('model loss - ' + DROPOUT_RATE)
+plt.title('model loss - ' + str(DROPOUT_RATE))
 plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
