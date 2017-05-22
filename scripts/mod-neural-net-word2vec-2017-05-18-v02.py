@@ -41,17 +41,18 @@ EMBEDDING_FILE = 'D:\\DataScience\\tmlg-quora\\data\\GoogleNews-vectors-negative
 
 # parameters
 MAX_NB_WORDS = 200000
-MAX_SEQUENCE_LENGTH = 40
+MAX_SEQUENCE_LENGTH = 25
 EMBEDDING_DIM = 300
 VALIDATION_SPLIT = 0.1
 TEST_SPLIT = 0.1
 NB_EPOCHS = 200
 DROPOUT_RATE = 0.47
+DENSE_REG = 0.1
 RNG_SEED = 13
 STOPWORDS = False
 STEM = False
 
-STAMP = 'nn_maxseq%d_dropout%1.2f_stopwd%s_stem%s' % (MAX_SEQUENCE_LENGTH, DROPOUT_RATE, STOPWORDS, STEM)
+STAMP = 'nn_maxseq%d_dreg%1.4fdropout%1.2f_stopwd%s_stem%s' % (MAX_SEQUENCE_LENGTH, DENSE_REG, DROPOUT_RATE, STOPWORDS, STEM)
 MODEL_WEIGHTS_FILE = STAMP + '.h5'
 
 #%% Create an index of word vectors
@@ -221,16 +222,16 @@ Q2.add(Lambda(lambda x: K.max(x, axis=1), output_shape=(EMBEDDING_DIM, )))
 model = Sequential()
 model.add(Merge([Q1, Q2], mode='concat'))
 model.add(BatchNormalization())
-model.add(Dense(200, activation='relu'))
+model.add(Dense(200, activation='relu', kernel_regularizer=regularizers.l2(DENSE_REG)))
 model.add(Dropout(DROPOUT_RATE))
 model.add(BatchNormalization())
-model.add(Dense(200, activation='relu'))
+model.add(Dense(200, activation='relu', kernel_regularizer=regularizers.l2(DENSE_REG)))
 model.add(Dropout(DROPOUT_RATE))
 model.add(BatchNormalization())
-model.add(Dense(200, activation='relu'))
+model.add(Dense(200, activation='relu', kernel_regularizer=regularizers.l2(DENSE_REG)))
 model.add(Dropout(DROPOUT_RATE))
 model.add(BatchNormalization())
-model.add(Dense(200, activation='relu'))
+model.add(Dense(200, activation='relu', kernel_regularizer=regularizers.l2(DENSE_REG)))
 model.add(Dropout(DROPOUT_RATE))
 model.add(BatchNormalization())
 model.add(Dense(1, activation='sigmoid'))
@@ -270,9 +271,9 @@ print('Minutes elapsed: %f' % ((t1 - t0) / 60.))
 model.load_weights(MODEL_WEIGHTS_FILE)
 
 # get the accuracy
-accuracy = model.evaluate([Q1_test, Q2_test], y_test)
-# accuracy is a list so the following line crash
-#print('accuracy  = {0:.4f}'.format(accuracy))
+metrics = model.evaluate([Q1_test, Q2_test], y_test)
+print('loss  = {0:.4f}'.format(metrics[0]))
+print('accuracy  = {0:.4f}'.format(metrics[1]))
 
 # save the best score 
 best_val_score = min(history.history['val_loss'])
