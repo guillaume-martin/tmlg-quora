@@ -23,6 +23,7 @@ from nltk.stem import SnowballStemmer
 from gensim.models import KeyedVectors
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
+from keras import regularizers
 from keras.models import Sequential
 from keras.layers import Embedding, Dropout, Dense, Merge, BatchNormalization, TimeDistributed, Lambda
 from keras.callbacks import ModelCheckpoint, EarlyStopping
@@ -46,13 +47,13 @@ EMBEDDING_DIM = 300
 VALIDATION_SPLIT = 0.1
 TEST_SPLIT = 0.1
 NB_EPOCHS = 200
-DROPOUT_RATE = 0.47
+DROPOUT_RATE = 0 # best at 0.47
 DENSE_REG = 0.1
 RNG_SEED = 13
 STOPWORDS = False
 STEM = False
 
-STAMP = 'nn_maxseq%d_dreg%1.4fdropout%1.2f_stopwd%s_stem%s' % (MAX_SEQUENCE_LENGTH, DENSE_REG, DROPOUT_RATE, STOPWORDS, STEM)
+STAMP = 'nn_maxseq%d_dreg%1.3f_dropout%1.2f_stopwd%s_stem%s' % (MAX_SEQUENCE_LENGTH, DENSE_REG, DROPOUT_RATE, STOPWORDS, STEM)
 MODEL_WEIGHTS_FILE = STAMP + '.h5'
 
 #%% Create an index of word vectors
@@ -272,19 +273,19 @@ model.load_weights(MODEL_WEIGHTS_FILE)
 
 # get the accuracy
 metrics = model.evaluate([Q1_test, Q2_test], y_test)
-print('loss  = {0:.4f}'.format(metrics[0]))
+print('\nloss  = {0:.4f}'.format(metrics[0]))
 print('accuracy  = {0:.4f}'.format(metrics[1]))
 
 # save the best score 
 best_val_score = min(history.history['val_loss'])
 
 # list all data in history
-print(history.history.keys())
+# print(history.history.keys())
 
 # summarize history for accuracy
 plt.plot(history.history['acc'])
 plt.plot(history.history['val_acc'])
-plt.title('model accuracy - ' + str(DROPOUT_RATE))
+plt.title('model accuracy\n' + STAMP)
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
@@ -297,7 +298,7 @@ plt.clf()
 # summarize history for loss
 plt.plot(history.history['loss'])
 plt.plot(history.history['val_loss'])
-plt.title('model loss - ' + str(DROPOUT_RATE))
+plt.title('model loss\n' + STAMP)
 plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
@@ -324,7 +325,7 @@ predictions = model.predict([Q1_test, Q2_test],
 
 #%% Save submission file
 
-print('Exporting submission file')
+print('\nExporting submission file')
 
 test_ids = np.array(test_ids, dtype='int64')
 submission = pd.DataFrame({'test_id':test_ids,'is_duplicate':predictions.ravel()})
