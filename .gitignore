@@ -1,3 +1,5 @@
 data/*
+data\*
 submission/*
-.csv
+submission\*
+*.h5
