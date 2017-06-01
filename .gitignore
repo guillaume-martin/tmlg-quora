@@ -1,4 +1,10 @@
 scripts/.ipynb_checkpoints/
 data/*
+data\*
 submission/*
+<<<<<<< HEAD
 
+=======
+submission\*
+*.h5
+>>>>>>> 92add180edc1a5d46680f79447bebc0c6f212a4c
