@@ -42,13 +42,13 @@ EMBEDDING_FILE = 'D:\\DataScience\\tmlg-quora\\data\\GoogleNews-vectors-negative
 
 # parameters
 MAX_NB_WORDS = 200000
-MAX_SEQUENCE_LENGTH = 25
+MAX_SEQUENCE_LENGTH = 30
 EMBEDDING_DIM = 300
 VALIDATION_SPLIT = 0.1
 TEST_SPLIT = 0.1
 NB_EPOCHS = 200
 DROPOUT_RATE = 0 # best at 0.47
-DENSE_REG = 0.1
+DENSE_REG = 0.05
 RNG_SEED = 13
 STOPWORDS = False
 STEM = False
@@ -244,7 +244,7 @@ model.compile(loss='binary_crossentropy',
               metrics=['accuracy'])
 
 
-early_stopping = EarlyStopping(monitor='val_loss', patience=3)
+early_stopping = EarlyStopping(monitor='val_loss', patience=5)
 model_chekpoint = ModelCheckpoint(MODEL_WEIGHTS_FILE, monitor='val_acc', save_best_only=True)
 
 callbacks = [early_stopping, model_chekpoint]

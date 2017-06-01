@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu May 22 2017
+Created on Thu May 25 13:50:50 2017
 
 @author: guillaume
 
-@version: 03
+@version: 01
 @changes
 """
 
@@ -25,7 +25,7 @@ from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras import regularizers
 from keras.models import Sequential
-from keras.layers import Embedding, Dropout, Dense, Merge, BatchNormalization, TimeDistributed, Lambda
+from keras.layers import Embedding, Dropout, Dense, Merge, BatchNormalization, TimeDistributed, Lambda, LSTM
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras import backend as K
 from sklearn.model_selection import train_test_split
@@ -40,25 +40,24 @@ TRAINING_DATA_FILE = 'train.csv'
 TEST_DATA_FILE = 'test.csv'
 EMBEDDING_FILE = 'D:\\DataScience\\tmlg-quora\\data\\GoogleNews-vectors-negative300.bin'
 
-# parameters
-# Preporcessing paramaters
+# text processing parameters
+MAX_NB_WORDS = 200000
+MAX_SEQUENCE_LENGTH = 30
+EMBEDDING_DIM = 300
 STOPWORDS = False
 STEM = False
-MAX_NB_WORDS = 200000
-EMBEDDING_DIM = 300
-MAX_SEQUENCE_LENGTH = 25
 
-# Model validation parameters
+# model parameters
 VALIDATION_SPLIT = 0.1
 TEST_SPLIT = 0.1
-
-# Neural network parameters
 NB_EPOCHS = 200
-DROPOUT_RATE = 0.47
-DENSE_REG = 0
+DROPOUT_RATE = 0.47 # best at 0.47
+DENSE_REG = 0.00
 RNG_SEED = 13
+LSTM_UNITS = 200 # dimensionality of the output space
+LSTM_DROPOUT = 0.5
 
-STAMP = 'nn_maxseq%d_dreg%1.3f_dropout%1.2f_stopwd%s_stem%s' % (MAX_SEQUENCE_LENGTH, DENSE_REG, DROPOUT_RATE, STOPWORDS, STEM)
+STAMP = 'lstm_maxseq%d_dreg%1.3f_dropout%1.2f_stopwd%s_stem%s' % (MAX_SEQUENCE_LENGTH, DENSE_REG, DROPOUT_RATE, STOPWORDS, STEM)
 MODEL_WEIGHTS_FILE = STAMP + '.h5'
 
 #%% Create an index of word vectors
@@ -69,23 +68,7 @@ word2vec = KeyedVectors.load_word2vec_format(EMBEDDING_FILE, binary=True)
 #%% Process text
 
 def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
-    ''' clean up questions
-    Parameters
-    ----------
-    text : string
-        The text of the question to be processed
-    
-    remove_stopwords : boolean
-        True if stopwords need to be removed. False otherwise
 
-    stem_word : boolean
-        True if words need to be reduced to their stem. False otherwier
-
-    Returns
-    -------
-    text : string
-        
-    '''
     # convert text to lowercase and split
     text = text.lower().split()
 
@@ -98,8 +81,6 @@ def text_to_wordlist(text, remove_stopwords=False, stem_words=False):
     # clean the text
     text = re.sub(r"[^A-Za-z0-9^,!.\/'+-=]", " ", text)
     text = re.sub(r"what's", "what is ", text)
-    text = re.sub(r"how's","how is", text)
-    text = re.sub(r"who's","who is", text)
     text = re.sub(r"\'s", " ", text)
     text = re.sub(r"\'ve", " have ", text)
     text = re.sub(r"can't", "cannot ", text)
@@ -198,6 +179,14 @@ print('Shape of question1 tensor: ', train_q1_data.shape)
 print('Shape of question2 tensor: ', train_q2_data.shape)
 print('Shape of label tensor: ', labels.shape)
 
+# save the data so we don't need to preprocess again
+np.save(DATA_DIR + 'train_q1_data.npy', train_q1_data)
+np.save(DATA_DIR + 'train_q2_data.npy', train_q2_data)
+np.save(DATA_DIR + 'labels.npy', labels)
+np.save(DATA_DIR + 'test_q1_data.npy', test_q1_data)
+np.save(DATA_DIR + 'test_q2_data.npy', test_q2_data)
+np.save(DATA_DIR + 'test_ids.npy', test_ids)
+
 #%% Generate embedding matrix
 
 print ('Generating embedding matrix')
@@ -208,8 +197,6 @@ for word, i in word_index.items():
         embedding_matrix[i] = word2vec.word_vec(word)
 print('Null word embeddings: %d' % np.sum(np.sum(embedding_matrix, axis=1) == 0))
 
-# export the matrix
-np.save(DATA_DIR + "embedding-matrix_nbwords%d_dim%d" % (nb_words, EMBEDDING_DIM))
 
 #%% Train/validation split
 
@@ -232,11 +219,13 @@ Q2_test = X_test[:,1]
 Q1 = Sequential()
 Q1.add(Embedding(nb_words + 1, EMBEDDING_DIM, weights=[embedding_matrix], input_length=MAX_SEQUENCE_LENGTH, trainable=False))
 Q1.add(TimeDistributed(Dense(EMBEDDING_DIM, activation='relu')))
-Q1.add(Lambda(lambda x: K.max(x, axis=1), output_shape=(EMBEDDING_DIM, )))
+Q1.add(LSTM(LSTM_UNITS, dropout=LSTM_DROPOUT, recurrent_dropout=LSTM_DROPOUT))
+#Q1.add(Lambda(lambda x: K.max(x, axis=1), output_shape=(EMBEDDING_DIM, )))
 Q2 = Sequential()
 Q2.add(Embedding(nb_words + 1, EMBEDDING_DIM, weights=[embedding_matrix], input_length=MAX_SEQUENCE_LENGTH, trainable=False))
 Q2.add(TimeDistributed(Dense(EMBEDDING_DIM, activation='relu')))
-Q2.add(Lambda(lambda x: K.max(x, axis=1), output_shape=(EMBEDDING_DIM, )))
+Q2.add(LSTM(LSTM_UNITS, dropout=LSTM_DROPOUT, recurrent_dropout=LSTM_DROPOUT))
+#Q2.add(Lambda(lambda x: K.max(x, axis=1), output_shape=(EMBEDDING_DIM, )))
 model = Sequential()
 model.add(Merge([Q1, Q2], mode='concat'))
 model.add(BatchNormalization())
@@ -261,7 +250,7 @@ model.compile(loss='binary_crossentropy',
               metrics=['accuracy'])
 
 
-early_stopping = EarlyStopping(monitor='val_loss', patience=3)
+early_stopping = EarlyStopping(monitor='val_loss', patience=5)
 model_chekpoint = ModelCheckpoint(MODEL_WEIGHTS_FILE, monitor='val_acc', save_best_only=True)
 
 callbacks = [early_stopping, model_chekpoint]
